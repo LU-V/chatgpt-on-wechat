@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-#
+import os
+
+import requests
 
 from bridge.context import ContextType
 from channel.chat_message import ChatMessage
@@ -35,7 +38,40 @@ class WeChatMPMessage(ChatMessage):
                 self.ctype = ContextType.TEXT
                 self.content = msg.recognition
         elif msg.type == "image":
+            logger.info("===is image ===")
             self.ctype = ContextType.IMAGE
+         #   self.content = TmpDir().path() + msg.media_id + ".png"  # content直接存临时目录路径
+            
+
+            
+            
+            def download_req_pic(image_url):
+
+                # 指定保存图片的文件夹路径
+                download_folder = TmpDir().path() + msg.media_id + "req" + ".png"
+
+                # 确保保存文件夹存在
+                if not os.path.exists(download_folder):
+                    os.makedirs(download_folder)
+
+                # 从链接中提取文件名
+                image_filename = os.path.join(download_folder, os.path.basename(image_url))
+
+                # 发起 HTTP GET 请求
+                response = requests.get(image_url)
+
+                if response.status_code == 200:
+                    # 如果请求成功，将图片数据保存到文件夹
+                    with open(image_filename, "wb") as file:
+                        file.write(response.content)
+
+                    print(f"图片已下载到：{image_filename}")
+                    self.req_image_path = image_filename
+                else:
+                    print("图片下载失败，状态码:", response.status_code)
+
+            download_req_pic(msg.image)
+
             self.content = TmpDir().path() + msg.media_id + ".png"  # content直接存临时目录路径
 
             def download_image():

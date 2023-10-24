@@ -43,19 +43,21 @@ class Facechain(Plugin):
         content = e_context["context"].content
         user_id = "1212121221"
         data = {"inputs": content, "user_id": user_id}
-
+        logger.info("===is facechain start ==={}".format(e_context["context"]))
         if e_context["context"].type == ContextType.IMAGE:
             resp = ''
-            # with open("D:\\PycharmProjects\\chatgpt-on-wechat\\tmp\\1.png", 'rb') as image_file:
-            logger.info("content :", e_context["context"].content)
-            with open(e_context["context"].content, 'rb') as image_file:
+#            with open("D:\\PycharmProjects\\chatgpt-on-wechat\\tmp\\1.png", 'rb') as image_file:
+          #  logger.info("req_image_path :", e_context["context"].req_image_path)
+            logger.info("===is facechain ==={}".format(e_context["context"]))
+            with open(e_context["context"]["req_image_path"], 'rb') as image_file:
                 files = {'image': image_file}
-                resp = self.http(files, data)
+             # resp = self.http(files, data)
 
         else:
             resp = self.http("", data)
 
-        reply.content = resp
+       # reply.content = resp
+        reply.content="NIHAO"
         e_context["reply"] = reply
         e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 

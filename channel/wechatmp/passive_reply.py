@@ -22,21 +22,22 @@ class Query:
 
     def POST(self):
         try:
-            args = web.input()
-            verify_server(args)
+            # args = web.input()
+            # verify_server(args)
             request_time = time.time()
             channel = WechatMPChannel()
             message = web.data()
             encrypt_func = lambda x: x
-            if args.get("encrypt_type") == "aes":
-                logger.debug("[wechatmp] Receive encrypted post data:\n" + message.decode("utf-8"))
-                if not channel.crypto:
-                    raise Exception("Crypto not initialized, Please set wechatmp_aes_key in config.json")
-                message = channel.crypto.decrypt_message(message, args.msg_signature, args.timestamp, args.nonce)
-                encrypt_func = lambda x: channel.crypto.encrypt_message(x, args.nonce, args.timestamp)
-            else:
-                logger.debug("[wechatmp] Receive post data:\n" + message.decode("utf-8"))
+            # if args.get("encrypt_type") == "aes":
+            #     logger.debug("[wechatmp] Receive encrypted post data:\n" + message.decode("utf-8"))
+            #     if not channel.crypto:
+            #         raise Exception("Crypto not initialized, Please set wechatmp_aes_key in config.json")
+            #     message = channel.crypto.decrypt_message(message, args.msg_signature, args.timestamp, args.nonce)
+            #     encrypt_func = lambda x: channel.crypto.encrypt_message(x, args.nonce, args.timestamp)
+            # else:
+            #     logger.debug("[wechatmp] Receive post data:\n" + message.decode("utf-8"))
             msg = parse_message(message)
+            logger.info("message: {}".format(msg))
             if msg.type in ["text", "voice", "image"]:
                 wechatmp_msg = WeChatMPMessage(msg, client=channel.client)
                 from_user = wechatmp_msg.from_user_id
