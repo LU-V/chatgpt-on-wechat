@@ -140,6 +140,23 @@ class WechatMPChannel(ChatChannel):
                 media_id = response["media_id"]
                 logger.info("[wechatmp] image uploaded, receiver {}, media_id {}".format(receiver, media_id))
                 self.cache_dict[receiver].append(("image", media_id))
+            elif reply.type == ReplyType.IMAGES:
+                for img in reply.content:
+                    img = io.BytesIO(img)
+                    image_storage = img
+                    image_storage.seek(0)
+                    image_type = imghdr.what(image_storage)
+                    filename = receiver + "-" + str(context["msg"].msg_id) + "." + image_type
+                    content_type = "image/" + image_type
+                    try:
+                        response = self.client.material.add("image", (filename, image_storage, content_type))
+                        logger.debug("[wechatmp] upload image response: {}".format(response))
+                    except WeChatClientException as e:
+                        logger.error("[wechatmp] upload image failed: {}".format(e))
+                        return
+                    media_id = response["media_id"]
+                    logger.info("[wechatmp] image uploaded, receiver {}, media_id {}".format(receiver, media_id))
+                    self.cache_dict[receiver].append(("image", media_id))
         else:
             if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR:
                 reply_text = reply.content

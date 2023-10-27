@@ -1,17 +1,12 @@
 # encoding:utf-8
-import json
+import base64
 
-import PIL
 import requests
-from PIL import Image
 
 import plugins
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
-from channel.chat_message import ChatMessage
-from common.log import logger
 from plugins import *
-from cachetools import TTLCache
 
 
 @plugins.register(
@@ -37,27 +32,27 @@ class Facechain(Plugin):
         ]:
             return
 
-        reply = Reply()
-        reply.type = ReplyType.TEXT
+
 
         content = e_context["context"].content
-        user_id = "1212121221"
-        data = {"inputs": content, "user_id": user_id}
+        data = {"inputs": content, "user_id": e_context["context"]["user_id"]}
         logger.info("===is facechain start ==={}".format(e_context["context"]))
+        resp = ''
         if e_context["context"].type == ContextType.IMAGE:
-            resp = ''
-#            with open("D:\\PycharmProjects\\chatgpt-on-wechat\\tmp\\1.png", 'rb') as image_file:
-          #  logger.info("req_image_path :", e_context["context"].req_image_path)
+
+
             logger.info("===is facechain ==={}".format(e_context["context"]))
             with open(e_context["context"]["req_image_path"], 'rb') as image_file:
-                files = {'image': image_file}
-             # resp = self.http(files, data)
+                image_data = image_file.read()
+
+            files = {'image': image_data}
+            resp = self.http(files, data)
 
         else:
             resp = self.http("", data)
 
-       # reply.content = resp
-        reply.content="NIHAO"
+        reply= process_resp(resp)
+
         e_context["reply"] = reply
         e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
 
@@ -70,43 +65,37 @@ class Facechain(Plugin):
             return
 
         if files != '':
-            response = requests.post('http://127.0.0.1:8080/upload_pic', files=files, data=inputs)
+            response = requests.post('http://region-31.seetacloud.com:25261/upload_pic', files=files, data=inputs)
 
         else:
-            response = requests.post('http://127.0.0.1:8080/upload_pic', data=inputs)
+            response = requests.post('http://region-31.seetacloud.com:25261/upload_pic', data=inputs)
 
         # 检查响应状态码
         if response.status_code == 200:
             print("请求成功！")
             # 输出响应内容
-            return (response.text)
+
+            return response
         else:
             return ("请求失败，状态码:", response.status_code)
 
-#
-# cache = TTLCache(maxsize=100, ttl=600)  # 缓存最多100个项，每个项的过期时间为60秒
-#
-#
-# def build_req(context, user_id):
-#     # 创建一个支持过期时间的缓存
-#     if cache.get(user_id) is not None:
-#         chatbot = cache.get(user_id)[1]
-#         chatbot.append((context, None))
-#         req = [context, chatbot]
-#     else:
-#         chatbot = (context, None)
-#         req = [context, chatbot]
-#     return req
-#
-#
-# def save_history(context, resp, user_id):
-#     his = cache.get(user_id)
-#     if his is None:
-#         chatbot = (context, resp)
-#         newMsg = ["", [chatbot]]
-#         cache[user_id] = newMsg
-#     else:
-#         chatbot = his[1]
-#         chatbot[-1] = (context, resp)
-#         cache[user_id] = his
-#     print(cache[user_id])
+def process_resp(response):
+
+    if "images" in response.text:
+        text = json.loads(response.text)
+        imgs=text['images']
+        image_binarys =[]
+        for index, encoded_image in enumerate(imgs):
+            # 解码Base64字符串为二进制数据
+            image_binary = base64.b64decode(encoded_image.encode('utf-8'))
+            image_binarys.append(image_binary)
+
+        reply = Reply()
+        reply.type = ReplyType.IMAGES
+        reply.content = image_binarys
+        return  reply
+    else:
+        reply = Reply()
+        reply.type = ReplyType.TEXT
+        reply.content = response.text
+        return reply

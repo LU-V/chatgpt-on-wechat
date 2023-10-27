@@ -15,7 +15,7 @@ class WeChatMPMessage(ChatMessage):
         self.msg_id = msg.id
         self.create_time = msg.time
         self.is_group = False
-
+        self.req_image_path =""
         if msg.type == "text":
             self.ctype = ContextType.TEXT
             self.content = msg.content
