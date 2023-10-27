@@ -65,10 +65,10 @@ class Facechain(Plugin):
             return
 
         if files != '':
-            response = requests.post('http://region-31.seetacloud.com:25261/upload_pic', files=files, data=inputs)
+            response = requests.post('http://region-31.seetacloud.com:25261/facechain_agent', files=files, data=inputs)
 
         else:
-            response = requests.post('http://region-31.seetacloud.com:25261/upload_pic', data=inputs)
+            response = requests.post('http://region-31.seetacloud.com:25261/facechain_agent', data=inputs)
 
         # 检查响应状态码
         if response.status_code == 200:
